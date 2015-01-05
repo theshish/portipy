@@ -99,6 +99,11 @@ if __name__ == '__main__':
 
     sp = init_session(args.username)
 
+    # Bad session
+    if not sp:
+        print 'Did not log in successfully'
+        sys.exit()
+
     if args.use_music_library:
         tracks_source = generate_music_library_tracks(sp, args.username)
     elif args.playlist:
