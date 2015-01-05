@@ -44,6 +44,20 @@ def generate_playlist_tracks(sp, username, playlist_id):
             break
 
 
+def generate_playlists(sp, username):
+    """Requires a session 'sp' and username."""
+    playlists_result = sp.user_playlists(username)
+    while playlists_result['items']:
+        playlists = playlists_result['items']
+
+        for playlist in playlists:
+            yield playlist
+
+        playlists_result = sp.next(playlists_result)
+        if not playlists_result:
+            break
+
+
 def get_user_token(username):
     """Prompt for and return a session token for a given username."""
     return spotipy.util.prompt_for_user_token(
@@ -53,7 +67,7 @@ def get_user_token(username):
 def get_playlist_id(sp, username, playlist_name):
     """Requires a session 'sp', username, and playlist name."""
     playlists = sp.user_playlists(username)
-    for playlist in playlists['items']:
+    for playlist in generate_playlists(sp, username):
         if playlist['owner']['id'] != username:
             continue
         if playlist['name'] != playlist_name:
