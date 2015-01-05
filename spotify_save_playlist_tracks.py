@@ -4,9 +4,10 @@ import sys
 import spotipy
 import spotipy.util as util
 
-CLIENT_ID = None
-CLIENT_SECRET = None
-REDIRECT_URI = None
+# You must modify these values to use this tool
+CLIENT_ID = 'YOUR CLIENT ID HERE'
+CLIENT_SECRET = 'YOUR CLIENT SECRET HERE'
+REDIRECT_URI = 'YOUR REDIRECT URI HERE'
 
 DEFAULT_SCOPE = 'playlist-read-private user-library-read'
 DEFAULT_TRACKS_LIMIT = 20
