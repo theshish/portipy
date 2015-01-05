@@ -1,4 +1,4 @@
 portipy
 =======
 
-Extract Spotify music from your library.
+Take your music with you.
