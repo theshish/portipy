@@ -4,7 +4,9 @@ import sys
 import spotipy
 import spotipy.util as util
 
-# You must modify these values to use this tool
+# You must modify these values to use this tool.
+# These values must match thoes in your Spotify app settings exactly, e.g.
+# case-sensitive and exact path for URI (trailing slash, etc.).
 CLIENT_ID = 'YOUR CLIENT ID HERE'
 CLIENT_SECRET = 'YOUR CLIENT SECRET HERE'
 REDIRECT_URI = 'YOUR REDIRECT URI HERE'
@@ -13,8 +15,8 @@ DEFAULT_SCOPE = 'playlist-read-private user-library-read'
 DEFAULT_TRACKS_LIMIT = 20
 
 
-# Requires a session 'sp' and username
 def generate_music_library_tracks(sp, username):
+    """Requires a session 'sp' and username."""
     saved_tracks_result = sp.current_user_saved_tracks(DEFAULT_TRACKS_LIMIT)
 
     while saved_tracks_result['items']:
@@ -28,6 +30,7 @@ def generate_music_library_tracks(sp, username):
 
 
 def generate_playlist_tracks(sp, username, playlist_id):
+    """Requires a session 'sp', username, and Spotify playlist id."""
     playlist_tracks_result = sp.user_playlist_tracks(
         username, playlist_id, limit=DEFAULT_TRACKS_LIMIT)
 
@@ -42,11 +45,13 @@ def generate_playlist_tracks(sp, username, playlist_id):
 
 
 def get_user_token(username):
+    """Prompt for and return a session token for a given username."""
     return spotipy.util.prompt_for_user_token(
         username, DEFAULT_SCOPE, CLIENT_ID, CLIENT_SECRET, REDIRECT_URI)
 
 
 def get_playlist_id(sp, username, playlist_name):
+    """Requires a session 'sp', username, and playlist name."""
     playlists = sp.user_playlists(username)
     for playlist in playlists['items']:
         if playlist['owner']['id'] != username:
@@ -59,6 +64,7 @@ def get_playlist_id(sp, username, playlist_name):
 
 
 def init_session(username):
+    """Initialize and return a Spotify session for username."""
     token = get_user_token(username)
 
     if not token:
@@ -69,6 +75,7 @@ def init_session(username):
 
 
 def make_track_summary(track_result):
+    """Generate a summary of a track result."""
     track = track_result['track']
     summary = {
         'album': track['album']['name'],
@@ -85,9 +92,10 @@ def make_track_summary(track_result):
 
 
 def serialize_track(track):
+    """Serialize a track summary object for output."""
     return json.dumps(track)
 
-# Run as main
+# Run as main.
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('username')
@@ -99,7 +107,8 @@ if __name__ == '__main__':
 
     sp = init_session(args.username)
 
-    # Bad session
+    # Bad session.
+    # It looks like right now this never gets triggered.
     if not sp:
         print 'Did not log in successfully'
         sys.exit()
