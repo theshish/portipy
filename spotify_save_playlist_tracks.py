@@ -6,7 +6,7 @@ import spotipy
 import spotipy.util as util
 
 # You must modify these values to use this tool.
-# These values must match thoes in your Spotify app settings exactly, e.g.
+# These values must match those in your Spotify app settings exactly, e.g.
 # case-sensitive and exact path for URI (trailing slash, etc.).
 CLIENT_ID = 'YOUR CLIENT ID HERE'
 CLIENT_SECRET = 'YOUR CLIENT SECRET HERE'
@@ -93,6 +93,7 @@ def init_session(username):
 
 
 def make_playlist_filename(playlist_name):
+    """Make a reasonable filename from a playlist name."""
     safe_name = ''.join(
         [c for c in playlist_name if c.isalpha() or c.isdigit() or c in ' -_'])
     safe_name = safe_name.replace(' ', '_')  # Eh... spaces. No.
