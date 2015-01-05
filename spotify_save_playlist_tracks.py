@@ -65,10 +65,10 @@ def get_playlist_id(sp, username, playlist_name):
 
 def init_session(username):
     """Initialize and return a Spotify session for username."""
-    token = get_user_token(username)
-
-    if not token:
-        print "Can't get token for", username
+    try:
+        token = get_user_token(username)
+    except spotipy.oauth2.SpotifyOauthError:
+        print "Couldn't get token for", username
         return None
 
     return spotipy.Spotify(auth=token)
@@ -107,9 +107,8 @@ if __name__ == '__main__':
 
     sp = init_session(args.username)
 
-    # Bad session.
-    # It looks like right now this never gets triggered.
     if not sp:
+        # Bad session.
         print 'Did not log in successfully'
         sys.exit()
 
