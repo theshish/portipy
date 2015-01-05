@@ -1,5 +1,6 @@
 import argparse
 import json
+import os.path
 import sys
 import spotipy
 import spotipy.util as util
@@ -13,6 +14,8 @@ REDIRECT_URI = 'YOUR REDIRECT URI HERE'
 
 DEFAULT_SCOPE = 'playlist-read-private user-library-read'
 DEFAULT_TRACKS_LIMIT = 20
+
+JSON_EXTENSION = '.json'
 
 
 def generate_music_library_tracks(sp, username):
@@ -51,6 +54,9 @@ def generate_playlists(sp, username):
         playlists = playlists_result['items']
 
         for playlist in playlists:
+            if playlist['owner']['id'] != username:
+                continue
+
             yield playlist
 
         playlists_result = sp.next(playlists_result)
@@ -68,8 +74,6 @@ def get_playlist_id(sp, username, playlist_name):
     """Requires a session 'sp', username, and playlist name."""
     playlists = sp.user_playlists(username)
     for playlist in generate_playlists(sp, username):
-        if playlist['owner']['id'] != username:
-            continue
         if playlist['name'] != playlist_name:
             continue
 
@@ -86,6 +90,13 @@ def init_session(username):
         return None
 
     return spotipy.Spotify(auth=token)
+
+
+def make_playlist_filename(playlist_name):
+    safe_name = ''.join(
+        [c for c in playlist_name if c.isalpha() or c.isdigit() or c in ' -_'])
+    safe_name = safe_name.replace(' ', '_')  # Eh... spaces. No.
+    return safe_name + JSON_EXTENSION
 
 
 def make_track_summary(track_result):
@@ -105,6 +116,21 @@ def make_track_summary(track_result):
     return summary
 
 
+def save_tracks_to_file(track_source, output_file):
+    """Requires a source for track objects and an output file-like object."""
+    for track in tracks_source:
+        track_summary = make_track_summary(track)
+        output_file.write(serialize_track(track_summary) + '\n')
+
+
+def save_tracks_to_path(track_source, output_path):
+    """Requires a source for track objects and an output filename."""
+    print 'Writing to file:', output_path
+    output_file = open(output_path, 'w')
+    save_tracks_to_file(track_source, output_file)
+    output_file.close()
+
+
 def serialize_track(track):
     """Serialize a track summary object for output."""
     return json.dumps(track)
@@ -113,8 +139,9 @@ def serialize_track(track):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('username')
-    parser.add_argument('output_file')
+    parser.add_argument('output_path')
     parser.add_argument('--use_music_library', action='store_true')
+    parser.add_argument('--all_playlists', action='store_true')
     parser.add_argument('--playlist')
 
     args = parser.parse_args()
@@ -128,6 +155,7 @@ if __name__ == '__main__':
 
     if args.use_music_library:
         tracks_source = generate_music_library_tracks(sp, args.username)
+        save_tracks_to_path(tracks_source, args.output_path)
     elif args.playlist:
         playlist_id = get_playlist_id(sp, args.username, args.playlist)
         if not playlist_id:
@@ -136,11 +164,23 @@ if __name__ == '__main__':
 
         tracks_source = generate_playlist_tracks(
             sp, args.username, playlist_id)
+        save_tracks_to_path(tracks_source, args.output_path)
+    elif args.all_playlists:
+        if not os.path.isdir(args.output_path):
+            print 'Output path must be an existing directory for saving all'\
+                'playlists'
+            sys.exit()
+
+        # Save all playlists to files in given directory
+        for playlist in generate_playlists(sp, args.username):
+            playlist_id = playlist['id']
+            playlist_name = playlist['name']
+
+            output_path = os.path.join(
+                args.output_path, make_playlist_filename(playlist_name))
+            tracks_source = generate_playlist_tracks(
+                sp, args.username, playlist_id)
+            save_tracks_to_path(tracks_source, output_path)
     else:
         print 'Must specify playlist or --use_music_library'
         sys.exit()
-
-    output_file = open(args.output_file, 'w')
-    for track in tracks_source:
-        track_summary = make_track_summary(track)
-        output_file.write(serialize_track(track_summary) + '\n')
