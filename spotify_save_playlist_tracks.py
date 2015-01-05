@@ -72,7 +72,6 @@ def get_user_token(username):
 
 def get_playlist_id(sp, username, playlist_name):
     """Requires a session 'sp', username, and playlist name."""
-    playlists = sp.user_playlists(username)
     for playlist in generate_playlists(sp, username):
         if playlist['name'] != playlist_name:
             continue
